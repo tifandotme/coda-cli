@@ -11,7 +11,7 @@ import { registerControlCommands } from "./commands/controls.ts";
 const program = new Command();
 
 program
-  .name("coda-cli")
+  .name("codaio")
   .description("CLI for the Coda API v1")
   .version("0.1.0")
   .option("--format <format>", "Output format: json (default) or table", "json");

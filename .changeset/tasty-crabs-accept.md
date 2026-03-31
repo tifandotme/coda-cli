@@ -1,5 +1,5 @@
 ---
-"coda-cli": minor
+"codaio": minor
 ---
 
 init

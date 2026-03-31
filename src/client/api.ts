@@ -18,7 +18,7 @@ export class CodaClient {
     return {
       Authorization: `Bearer ${this.token}`,
       "Content-Type": "application/json",
-      "User-Agent": `coda-cli/${VERSION}`,
+      "User-Agent": `codaio/${VERSION}`,
     };
   }
 

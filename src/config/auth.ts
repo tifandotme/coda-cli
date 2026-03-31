@@ -6,16 +6,33 @@ interface CodaConfig {
   token?: string;
 }
 
-function getConfigDir(): string {
-  return join(homedir(), ".config", "coda-cli");
+const CONFIG_DIR_NAME = "codaio";
+const LEGACY_CONFIG_DIR_NAME = "coda-cli";
+
+function getConfigDir(dirName = CONFIG_DIR_NAME): string {
+  return join(homedir(), ".config", dirName);
 }
 
-function getConfigPath(): string {
-  return join(getConfigDir(), "config.json");
+function getConfigPath(dirName = CONFIG_DIR_NAME): string {
+  return join(getConfigDir(dirName), "config.json");
+}
+
+async function resolveConfigPath(): Promise<string> {
+  const preferredPath = getConfigPath();
+  if (await Bun.file(preferredPath).exists()) {
+    return preferredPath;
+  }
+
+  const legacyPath = getConfigPath(LEGACY_CONFIG_DIR_NAME);
+  if (await Bun.file(legacyPath).exists()) {
+    return legacyPath;
+  }
+
+  return preferredPath;
 }
 
 async function readConfig(): Promise<CodaConfig> {
-  const path = getConfigPath();
+  const path = await resolveConfigPath();
   const file = Bun.file(path);
   const exists = await file.exists();
   if (!exists) return {};
@@ -56,7 +73,7 @@ export async function requireToken(): Promise<string> {
   const token = await getToken();
   if (!token) {
     console.error(
-      "No API token found. Run 'coda-cli login' or set the CODA_API_TOKEN environment variable."
+      "No API token found. Run 'codaio login' or set the CODA_API_TOKEN environment variable."
     );
     process.exit(1);
   }

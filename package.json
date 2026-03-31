@@ -1,11 +1,9 @@
 {
-  "name": "coda-cli",
+  "name": "codaio",
   "version": "0.1.0",
   "description": "CLI for the Coda API v1",
   "type": "module",
-  "bin": {
-    "coda-cli": "./dist/cli.js"
-  },
+  "bin": "./dist/cli.js",
   "files": ["dist"],
   "scripts": {
     "build": "bun build src/index.ts --outfile dist/cli.js --target node --format esm --banner '#!/usr/bin/env node' && chmod +x dist/cli.js",

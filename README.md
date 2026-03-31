@@ -1,13 +1,13 @@
-# coda-cli
+# codaio
 
 A CLI for the [Coda API v1](https://coda.io/developers/apis/v1), designed for use by AI agents (Claude Code, Cursor, etc.) and humans alike.
 
 ## Installation
 
 ```bash
-npm install -g coda-cli
+npm install -g codaio
 # or
-bunx coda-cli
+bunx codaio
 ```
 
 ## Authentication
@@ -15,7 +15,7 @@ bunx coda-cli
 Generate an API token at https://coda.io/account, then:
 
 ```bash
-coda-cli login
+codaio login
 ```
 
 Or set the `CODA_API_TOKEN` environment variable (takes priority over stored token).
@@ -23,7 +23,7 @@ Or set the `CODA_API_TOKEN` environment variable (takes priority over stored tok
 ## Usage
 
 ```
-coda-cli [options] [command]
+codaio [options] [command]
 
 Options:
   --format <format>  Output format: json (default) or table
@@ -66,28 +66,28 @@ Commands:
 By default all commands output JSON — ideal for piping to `jq` or agent use.
 
 ```bash
-coda-cli docs list | jq '.[].name'
+codaio docs list | jq '.[].name'
 
 # Human-readable table
-coda-cli docs list --format table
+codaio docs list --format table
 ```
 
 ## Examples
 
 ```bash
 # List all docs you own
-coda-cli docs list --is-owner
+codaio docs list --is-owner
 
 # Get all rows from a table
-coda-cli rows list <docId> <tableId> --all
+codaio rows list <docId> <tableId> --all
 
 # Upsert a row (by column name key)
-coda-cli rows upsert <docId> <tableId> \
+codaio rows upsert <docId> <tableId> \
   --cells '[{"column":"Name","value":"Alice"}]' \
   --key-columns Name
 
 # Export a page to Markdown
-coda-cli pages export <docId> <pageId> --output-format markdown
+codaio pages export <docId> <pageId> --output-format markdown
 ```
 
 ## Environment Variables

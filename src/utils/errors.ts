@@ -33,7 +33,7 @@ export function formatError(err: unknown, format: "json" | "table"): string {
 function friendlyMessage(err: CodaApiError): string {
   switch (err.statusCode) {
     case 401:
-      return `Authentication failed. Run 'coda-cli login' or set CODA_API_TOKEN. (${err.message})`;
+      return `Authentication failed. Run 'codaio login' or set CODA_API_TOKEN. (${err.message})`;
     case 403:
       return `Permission denied. Your token may not have access to this resource. (${err.message})`;
     case 404:

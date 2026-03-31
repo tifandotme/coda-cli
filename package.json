@@ -1,12 +1,14 @@
 {
   "name": "codaio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI for the Coda API v1",
   "type": "module",
   "bin": {
     "codaio": "dist/cli.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -33,6 +35,11 @@
   "engines": {
     "node": ">=18"
   },
-  "keywords": ["coda", "coda.io", "cli", "api"],
+  "keywords": [
+    "coda",
+    "coda.io",
+    "cli",
+    "api"
+  ],
   "license": "MIT"
 }

@@ -3,8 +3,13 @@
   "version": "0.1.0",
   "description": "CLI for the Coda API v1",
   "type": "module",
-  "bin": "./dist/cli.js",
+  "bin": {
+    "codaio": "dist/cli.js"
+  },
   "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "bun build src/index.ts --outfile dist/cli.js --target node --format esm --banner '#!/usr/bin/env node' && chmod +x dist/cli.js",
     "changeset": "changeset",

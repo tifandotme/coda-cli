@@ -1,5 +1,11 @@
 # codaio
 
+## 0.4.0
+
+### Minor Changes
+
+- b623359: fix issues
+
 ## 0.3.0
 
 ### Minor Changes

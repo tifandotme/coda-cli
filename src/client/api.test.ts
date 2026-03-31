@@ -12,6 +12,8 @@ function mockResponse(status: number, body: unknown, headers: Record<string, str
 
 let originalFetch: typeof globalThis.fetch;
 
+type MockFetch = typeof globalThis.fetch;
+
 beforeEach(() => {
   originalFetch = globalThis.fetch;
 });
@@ -22,10 +24,10 @@ afterEach(() => {
 
 test("get sends correct Authorization header", async () => {
   const calls: Request[] = [];
-  globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+  globalThis.fetch = (async (input: Request | string | URL, init?: RequestInit) => {
     calls.push(new Request(input as string, init));
     return mockResponse(200, { id: "abc", name: "Test Doc" });
-  };
+  }) as MockFetch;
 
   const client = new CodaClient("my-token");
   await client.get("/docs/abc");
@@ -36,10 +38,10 @@ test("get sends correct Authorization header", async () => {
 
 test("get appends query params", async () => {
   let capturedUrl = "";
-  globalThis.fetch = async (input: RequestInfo | URL) => {
+  globalThis.fetch = (async (input: Request | string | URL) => {
     capturedUrl = input.toString();
     return mockResponse(200, { items: [] });
-  };
+  }) as MockFetch;
 
   const client = new CodaClient("tok");
   await client.get("/docs", { limit: 10, query: "hello" });
@@ -50,10 +52,10 @@ test("get appends query params", async () => {
 
 test("get omits undefined query params", async () => {
   let capturedUrl = "";
-  globalThis.fetch = async (input: RequestInfo | URL) => {
+  globalThis.fetch = (async (input: Request | string | URL) => {
     capturedUrl = input.toString();
     return mockResponse(200, { items: [] });
-  };
+  }) as MockFetch;
 
   const client = new CodaClient("tok");
   await client.get("/docs", { limit: 10, query: undefined });
@@ -63,8 +65,7 @@ test("get omits undefined query params", async () => {
 });
 
 test("throws CodaApiError on non-OK response", async () => {
-  globalThis.fetch = async () =>
-    mockResponse(404, { message: "Doc not found" });
+  globalThis.fetch = (async () => mockResponse(404, { message: "Doc not found" })) as unknown as MockFetch;
 
   const client = new CodaClient("tok");
   let thrown: unknown;
@@ -81,13 +82,13 @@ test("throws CodaApiError on non-OK response", async () => {
 
 test("retries on 429 up to MAX_RETRIES times", async () => {
   let calls = 0;
-  globalThis.fetch = async () => {
+  globalThis.fetch = (async () => {
     calls++;
     if (calls <= 3) {
       return mockResponse(429, { message: "rate limited" }, { "Retry-After": "0" });
     }
     return mockResponse(200, { id: "ok" });
-  };
+  }) as unknown as MockFetch;
 
   const client = new CodaClient("tok");
   const result = await client.get<{ id: string }>("/docs/abc");
@@ -96,8 +97,8 @@ test("retries on 429 up to MAX_RETRIES times", async () => {
 });
 
 test("throws CodaApiError after exhausting retries on 429", async () => {
-  globalThis.fetch = async () =>
-    mockResponse(429, { message: "too many requests" }, { "Retry-After": "0" });
+  globalThis.fetch = (async () =>
+    mockResponse(429, { message: "too many requests" }, { "Retry-After": "0" })) as unknown as MockFetch;
 
   const client = new CodaClient("tok");
   let thrown: unknown;
@@ -113,10 +114,10 @@ test("throws CodaApiError after exhausting retries on 429", async () => {
 
 test("post sends JSON body", async () => {
   let capturedBody = "";
-  globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit) => {
+  globalThis.fetch = (async (_input: Request | string | URL, init?: RequestInit) => {
     capturedBody = init?.body as string;
     return mockResponse(200, { id: "new-doc" });
-  };
+  }) as MockFetch;
 
   const client = new CodaClient("tok");
   await client.post("/docs", { title: "My Doc" });
@@ -125,7 +126,7 @@ test("post sends JSON body", async () => {
 });
 
 test("returns undefined for 204 No Content", async () => {
-  globalThis.fetch = async () => new Response(null, { status: 204 });
+  globalThis.fetch = (async () => new Response(null, { status: 204 })) as unknown as MockFetch;
 
   const client = new CodaClient("tok");
   const result = await client.delete("/docs/abc");

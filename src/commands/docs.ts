@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { getClient } from "../client/api.ts";
 import { fetchAll } from "../client/paginator.ts";
+import { buildApiPath, normalizeDocId } from "../utils/coda-paths.ts";
 import { printOutput, type OutputFormat } from "../utils/output.ts";
 import { formatError } from "../utils/errors.ts";
 import type { components } from "../types/openapi.d.ts";
@@ -59,7 +60,7 @@ export function registerDocCommands(program: Command): void {
       const fmt = fmt_of(program);
       try {
         const client = await getClient();
-        const doc = await client.get<Doc>(`/docs/${docId}`);
+        const doc = await client.get<Doc>(buildApiPath("docs", normalizeDocId(docId)));
         printOutput(doc, fmt);
       } catch (err) {
         console.error(formatError(err, fmt));
@@ -99,11 +100,12 @@ export function registerDocCommands(program: Command): void {
       const fmt = fmt_of(program);
       try {
         const client = await getClient();
-        await client.delete(`/docs/${docId}`);
+        const normalizedDocId = normalizeDocId(docId);
+        await client.delete(buildApiPath("docs", normalizedDocId));
         if (fmt === "json") {
-          console.log(JSON.stringify({ deleted: true, docId }));
+          console.log(JSON.stringify({ deleted: true, docId: normalizedDocId }));
         } else {
-          console.log(`Deleted doc ${docId}`);
+          console.log(`Deleted doc ${normalizedDocId}`);
         }
       } catch (err) {
         console.error(formatError(err, fmt));

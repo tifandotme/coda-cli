@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { getClient } from "../client/api.ts";
 import { fetchAll } from "../client/paginator.ts";
+import { buildApiPath, normalizeDocId } from "../utils/coda-paths.ts";
 import { printOutput, type OutputFormat } from "../utils/output.ts";
 import { formatError } from "../utils/errors.ts";
 import type { components } from "../types/openapi.d.ts";
@@ -20,11 +21,12 @@ export function registerTableCommands(program: Command): void {
     .option("--table-types <types>", "Comma-separated table types to filter by (table, view, etc.)")
     .action(async (docId, opts) => {
       const fmt = fmt_of(program);
+      const tablesPath = buildApiPath("docs", normalizeDocId(docId), "tables");
       try {
         const client = await getClient();
         if (opts.all) {
           const items = await fetchAll<Table>((pageToken) =>
-            client.get<TableList>(`/docs/${docId}/tables`, {
+            client.get<TableList>(tablesPath, {
               pageToken,
               limit: parseInt(opts.limit),
               tableTypes: opts.tableTypes,
@@ -32,7 +34,7 @@ export function registerTableCommands(program: Command): void {
           );
           printOutput(items, fmt);
         } else {
-          const result = await client.get<TableList>(`/docs/${docId}/tables`, {
+          const result = await client.get<TableList>(tablesPath, {
             pageToken: opts.pageToken,
             limit: parseInt(opts.limit),
             tableTypes: opts.tableTypes,
@@ -52,7 +54,9 @@ export function registerTableCommands(program: Command): void {
       const fmt = fmt_of(program);
       try {
         const client = await getClient();
-        const table = await client.get<Table>(`/docs/${docId}/tables/${tableIdOrName}`);
+        const table = await client.get<Table>(
+          buildApiPath("docs", normalizeDocId(docId), "tables", tableIdOrName)
+        );
         printOutput(table, fmt);
       } catch (err) {
         console.error(formatError(err, fmt));

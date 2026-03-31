@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { getClient } from "../client/api.ts";
 import { fetchAll } from "../client/paginator.ts";
+import { buildApiPath, normalizeDocId } from "../utils/coda-paths.ts";
 import { printOutput, type OutputFormat } from "../utils/output.ts";
 import { formatError } from "../utils/errors.ts";
 import type { components } from "../types/openapi.d.ts";
@@ -19,18 +20,19 @@ export function registerControlCommands(program: Command): void {
     .option("--all", "Fetch all pages")
     .action(async (docId, opts) => {
       const fmt = fmt_of(program);
+      const controlsPath = buildApiPath("docs", normalizeDocId(docId), "controls");
       try {
         const client = await getClient();
         if (opts.all) {
           const items = await fetchAll<Control>((pageToken) =>
-            client.get<ControlList>(`/docs/${docId}/controls`, {
+            client.get<ControlList>(controlsPath, {
               pageToken,
               limit: parseInt(opts.limit),
             })
           );
           printOutput(items, fmt);
         } else {
-          const result = await client.get<ControlList>(`/docs/${docId}/controls`, {
+          const result = await client.get<ControlList>(controlsPath, {
             pageToken: opts.pageToken,
             limit: parseInt(opts.limit),
           });
@@ -50,7 +52,7 @@ export function registerControlCommands(program: Command): void {
       try {
         const client = await getClient();
         const control = await client.get<Control>(
-          `/docs/${docId}/controls/${controlIdOrName}`
+          buildApiPath("docs", normalizeDocId(docId), "controls", controlIdOrName)
         );
         printOutput(control, fmt);
       } catch (err) {

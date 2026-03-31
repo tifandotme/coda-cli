@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { getClient } from "../client/api.ts";
 import { fetchAll } from "../client/paginator.ts";
+import { buildApiPath, normalizeDocId } from "../utils/coda-paths.ts";
 import { printOutput, type OutputFormat } from "../utils/output.ts";
 import { formatError } from "../utils/errors.ts";
 import type { components } from "../types/openapi.d.ts";
@@ -20,11 +21,12 @@ export function registerColumnCommands(program: Command): void {
     .option("--all", "Fetch all pages")
     .action(async (docId, tableIdOrName, opts) => {
       const fmt = fmt_of(program);
+      const columnsPath = buildApiPath("docs", normalizeDocId(docId), "tables", tableIdOrName, "columns");
       try {
         const client = await getClient();
         if (opts.all) {
           const items = await fetchAll<Column>((pageToken) =>
-            client.get<ColumnList>(`/docs/${docId}/tables/${tableIdOrName}/columns`, {
+            client.get<ColumnList>(columnsPath, {
               pageToken,
               limit: parseInt(opts.limit),
               visibleOnly: opts.visibleOnly || undefined,
@@ -32,14 +34,11 @@ export function registerColumnCommands(program: Command): void {
           );
           printOutput(items, fmt);
         } else {
-          const result = await client.get<ColumnList>(
-            `/docs/${docId}/tables/${tableIdOrName}/columns`,
-            {
-              pageToken: opts.pageToken,
-              limit: parseInt(opts.limit),
-              visibleOnly: opts.visibleOnly || undefined,
-            }
-          );
+          const result = await client.get<ColumnList>(columnsPath, {
+            pageToken: opts.pageToken,
+            limit: parseInt(opts.limit),
+            visibleOnly: opts.visibleOnly || undefined,
+          });
           printOutput(result, fmt);
         }
       } catch (err) {

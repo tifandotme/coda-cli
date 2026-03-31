@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { getClient } from "../client/api.ts";
 import { fetchAll } from "../client/paginator.ts";
+import { buildApiPath, normalizeDocId } from "../utils/coda-paths.ts";
 import { printOutput, type OutputFormat } from "../utils/output.ts";
 import { formatError } from "../utils/errors.ts";
 import type { components } from "../types/openapi.d.ts";
@@ -19,18 +20,19 @@ export function registerFormulaCommands(program: Command): void {
     .option("--all", "Fetch all pages")
     .action(async (docId, opts) => {
       const fmt = fmt_of(program);
+      const formulasPath = buildApiPath("docs", normalizeDocId(docId), "formulas");
       try {
         const client = await getClient();
         if (opts.all) {
           const items = await fetchAll<Formula>((pageToken) =>
-            client.get<FormulaList>(`/docs/${docId}/formulas`, {
+            client.get<FormulaList>(formulasPath, {
               pageToken,
               limit: parseInt(opts.limit),
             })
           );
           printOutput(items, fmt);
         } else {
-          const result = await client.get<FormulaList>(`/docs/${docId}/formulas`, {
+          const result = await client.get<FormulaList>(formulasPath, {
             pageToken: opts.pageToken,
             limit: parseInt(opts.limit),
           });
@@ -50,7 +52,7 @@ export function registerFormulaCommands(program: Command): void {
       try {
         const client = await getClient();
         const formula = await client.get<Formula>(
-          `/docs/${docId}/formulas/${formulaIdOrName}`
+          buildApiPath("docs", normalizeDocId(docId), "formulas", formulaIdOrName)
         );
         printOutput(formula, fmt);
       } catch (err) {

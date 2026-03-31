@@ -1,6 +1,7 @@
 import type { Command } from "commander";
 import { getClient } from "../client/api.ts";
 import { fetchAll } from "../client/paginator.ts";
+import { buildApiPath, normalizeDocId } from "../utils/coda-paths.ts";
 import { printOutput, type OutputFormat } from "../utils/output.ts";
 import { formatError } from "../utils/errors.ts";
 import type { components } from "../types/openapi.d.ts";
@@ -28,6 +29,7 @@ export function registerRowCommands(program: Command): void {
     .option("--all", "Fetch all pages")
     .action(async (docId, tableIdOrName, opts) => {
       const fmt = fmt_of(program);
+      const rowsPath = buildApiPath("docs", normalizeDocId(docId), "tables", tableIdOrName, "rows");
       try {
         const client = await getClient();
         const baseParams = {
@@ -41,17 +43,14 @@ export function registerRowCommands(program: Command): void {
         };
         if (opts.all) {
           const items = await fetchAll<Row>((pageToken) =>
-            client.get<RowList>(`/docs/${docId}/tables/${tableIdOrName}/rows`, {
+            client.get<RowList>(rowsPath, {
               ...baseParams,
               pageToken,
             })
           );
           printOutput(items, fmt);
         } else {
-          const result = await client.get<RowList>(
-            `/docs/${docId}/tables/${tableIdOrName}/rows`,
-            { ...baseParams, pageToken: opts.pageToken }
-          );
+          const result = await client.get<RowList>(rowsPath, { ...baseParams, pageToken: opts.pageToken });
           printOutput(result, fmt);
         }
       } catch (err) {
@@ -70,7 +69,7 @@ export function registerRowCommands(program: Command): void {
       try {
         const client = await getClient();
         const row = await client.get<Row>(
-          `/docs/${docId}/tables/${tableIdOrName}/rows/${rowIdOrName}`,
+          buildApiPath("docs", normalizeDocId(docId), "tables", tableIdOrName, "rows", rowIdOrName),
           {
             useColumnNames: opts.useColumnNames || undefined,
             valueFormat: opts.valueFormat,
@@ -112,9 +111,10 @@ export function registerRowCommands(program: Command): void {
           keyColumns: opts.keyColumns ? opts.keyColumns.split(",") : undefined,
         };
         const client = await getClient();
+        const rowsPath = buildApiPath("docs", normalizeDocId(docId), "tables", tableIdOrName, "rows");
         const path = opts.disableParsing
-          ? `/docs/${docId}/tables/${tableIdOrName}/rows?disableParsing=true`
-          : `/docs/${docId}/tables/${tableIdOrName}/rows`;
+          ? `${rowsPath}?disableParsing=true`
+          : rowsPath;
         const result = await client.post(path, body);
         printOutput(result, fmt);
       } catch (err) {
@@ -139,9 +139,17 @@ export function registerRowCommands(program: Command): void {
           row: { cells: cells as RowUpdate["row"]["cells"] },
         };
         const client = await getClient();
+        const rowPathBase = buildApiPath(
+          "docs",
+          normalizeDocId(docId),
+          "tables",
+          tableIdOrName,
+          "rows",
+          rowIdOrName
+        );
         const rowPath = opts.disableParsing
-          ? `/docs/${docId}/tables/${tableIdOrName}/rows/${rowIdOrName}?disableParsing=true`
-          : `/docs/${docId}/tables/${tableIdOrName}/rows/${rowIdOrName}`;
+          ? `${rowPathBase}?disableParsing=true`
+          : rowPathBase;
         const result = await client.put(rowPath, body);
         printOutput(result, fmt);
       } catch (err) {
@@ -160,10 +168,7 @@ export function registerRowCommands(program: Command): void {
         const rowIds = opts.rowIds.split(",").map((id: string) => id.trim());
         const body: RowsDelete = { rowIds };
         const client = await getClient();
-        await client.delete(
-          `/docs/${docId}/tables/${tableIdOrName}/rows`,
-          body
-        );
+        await client.delete(buildApiPath("docs", normalizeDocId(docId), "tables", tableIdOrName, "rows"), body);
         if (fmt === "json") {
           console.log(JSON.stringify({ deleted: true, rowIds }));
         } else {

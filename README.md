@@ -18,7 +18,9 @@ Generate an API token at https://coda.io/account, then:
 codaio login
 ```
 
-Or set the `CODA_API_TOKEN` environment variable (takes priority over stored token).
+`codaio login` stores the token in `~/.config/codaio/config.json`.
+
+Or set the `CODA_API_TOKEN` environment variable (takes priority over the stored token). This is mainly useful when you want other tools like `curl` to reuse the same token; the CLI itself already reads the saved config.
 
 ## Usage
 
@@ -95,6 +97,14 @@ codaio pages export <docId> <pageId> --output-format markdown
 | Variable         | Description                             |
 | ---------------- | --------------------------------------- |
 | `CODA_API_TOKEN` | Coda API token (overrides stored token) |
+
+## Browser URLs vs API IDs
+
+Coda browser URLs and API IDs are annoyingly close but not identical.
+
+- Browser doc URLs use `_d...`, while the API returns the doc ID without that leading `d`.
+- Example: `https://coda.io/d/My-Doc_dAbCdEf123` maps to API doc ID `AbCdEf123`.
+- If you already have the full browser URL, you can pass the URL directly anywhere the CLI asks for a `docId`.
 
 ## TODO: Future API coverage
 

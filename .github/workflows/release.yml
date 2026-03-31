@@ -1,0 +1,72 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Cache Bun
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun
+          key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          no-cache: true
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build package
+        run: bun run build
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Version package
+        run: bunx changeset version
+
+      - name: Ensure release changes exist
+        run: |
+          if git diff --quiet; then
+            echo "No release changes were generated. Add a changeset before running this workflow." >&2
+            exit 1
+          fi
+
+      - name: Commit release changes
+        run: |
+          git add -A .
+          git commit -m "chore: release"
+
+      - name: Create .npmrc
+        run: |
+          cat << EOF > "$HOME/.npmrc"
+          //registry.npmjs.org/:_authToken=$NPM_TOKEN
+          EOF
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish package
+        run: bunx changeset publish
+
+      - name: Push release commit and tags
+        run: git push --follow-tags origin HEAD:${GITHUB_REF_NAME}
